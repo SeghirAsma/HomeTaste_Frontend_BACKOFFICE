@@ -67,7 +67,7 @@ export default function MyProfile() {
       formData.append("businessName", businessName);
       formData.append("documentUrl", documentUrl);
       formData.append("businessType", businessType);
-      formData.append("dateOfBirth", dateOfBirth);
+      formData.append("dateOfBirth", dateOfBirth.toISOString());
       formData.append("profileImgUrl", profileImgUrl);
       socialLinks.forEach((link) => formData.append("socialLinks", link));
 
@@ -153,11 +153,11 @@ export default function MyProfile() {
                             label="Date of Birth"
                             value={dateOfBirth}
                             onChange={(newValue) => setDateOfBirth(newValue)}
-//onChange={(newValue) => setDateOfBirth(newValue ? newValue.toISOString().split("T")[0] : null)} //si convert en string
                             renderInput={(params) => <TextField {...params} fullWidth />}
-                            disableFuture 
+                            disableFuture
                         />
-                        </LocalizationProvider>
+                    </LocalizationProvider>
+
 
                     <FormControl fullWidth>
                       <InputLabel>Business Type</InputLabel>
