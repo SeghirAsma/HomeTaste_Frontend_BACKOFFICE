@@ -67,7 +67,7 @@ export default function MyProfile() {
       formData.append("businessName", businessName);
       formData.append("documentUrl", documentUrl);
       formData.append("businessType", businessType);
-      formData.append("dateOfBirth", dateOfBirth.toISOString());
+      formData.append("dateOfBirth", dateOfBirth.toLocaleDateString('en-CA'));
       formData.append("profileImgUrl", profileImgUrl);
       socialLinks.forEach((link) => formData.append("socialLinks", link));
 

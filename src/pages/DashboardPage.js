@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect  } from "react";
 import {
   Box, Toolbar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
   Paper, Avatar, IconButton,  Tooltip, Stack, Grid, Card, CardContent, Typography, Select, MenuItem
@@ -13,22 +13,9 @@ import ApproveSellerDialog from "../components/Dialogs/ApproveSellerDialog";
 import RejectSellerDialog from "../components/Dialogs/RejectSellerDialog";
 import Pagination from '@mui/material/Pagination';
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import axios from "axios";
 
 const drawerWidth = 240;
-
-// --- Données ---
-const sellers = [
-  { id: 1, firstName : "Alain", lastName : "Savery", commercialName: "Green Market", image: "https://i.pravatar.cc/100?img=1", phone: "+33 6 12 34 56 78", dob: "1998-03-12", email: "contact@greenmarket.fr", companyName: "Green Market SARL", address: "12 Rue des Lilas, Paris", city: "Paris", country: "France", category: "Produits écologiques", website: "https://greenmarket.fr", description: "Vente de produits écologiques faits maison." },
-  { id: 2, firstName : "Emilie", lastName : "Borny", commercialName: "EcoStyle", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-  { id: 3, firstName : "Belle", lastName : "Johny", commercialName: "FAshionDress", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-  { id: 4, firstName : "Moley", lastName : "Astanzi", commercialName: "BoxStyle", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-  { id: 4, firstName : "Moley", lastName : "Astanzi", commercialName: "BoxStyle", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-  { id: 4, firstName : "Moley", lastName : "Astanzi", commercialName: "BoxStyle", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-  { id: 4, firstName : "Moley", lastName : "Astanzi", commercialName: "BoxStyle", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-  { id: 4, firstName : "Moley", lastName : "Astanzi", commercialName: "BoxStyle", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-  { id: 4, firstName : "Moley", lastName : "Astanzi", commercialName: "BoxStyle", image: "https://i.pravatar.cc/100?img=2", phone: "+33 7 45 67 89 10", dob: "1995-07-08", email: "hello@ecostyle.com", companyName: "EcoStyle SAS", address: "45 Avenue de Lyon, Lyon", city: "Lyon", country: "France", category: "Vêtements durables", website: "https://ecostyle.com", description: "Création de vêtements éthiques et durables." },
-];
-
 
 export default function Dashboard() {
   const [selectedSeller, setSelectedSeller] = useState(null);
@@ -36,15 +23,23 @@ export default function Dashboard() {
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
   const [reason, setReason] = useState("");
+  const [sellersAppending, setSellersAppending] = useState([]);
+  const [sellersRejected, setSellersRejected] = useState([]);
+  const [sellersApproved, setSellersApproved] = useState([]);
+  const [sellerCount, setSellerCount] = useState(0);
 
-  //donnes card
-const [period, setPeriod] = useState("1 M");
-const stats = {
-  "1 W": { comptesCrees: 12 },
-  "1 M": { comptesCrees: 48},
-  "3 M": { comptesCrees: 120 },
-};
-const data = stats[period];
+  const pendingAccountsCount = sellersAppending.length;
+  const ArchivedAccountsCount = sellersRejected.length;
+  const ApprovedAccountsCount = sellersApproved.length;
+  
+  const [stats, setStats] = useState({
+    "1 W": 0,
+    "1 M": 0,
+    "3 M": 0,
+  });
+  const [period, setPeriod] = useState("1 M");
+
+
 
 //courbe
 const chartData = [
@@ -83,9 +78,79 @@ const chartData = [
   const rowsPerPage = 6; // nombre d’éléments max par page
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentSellers = sellers.slice(startIndex, endIndex);
-  const pageCount = Math.ceil(sellers.length / rowsPerPage);
+  const currentSellers = sellersAppending.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(sellersAppending.length / rowsPerPage);
 
+  //get users nn approuvé
+  useEffect(() => {
+     const storedToken = localStorage.getItem("token") ;
+    axios.get("http://localhost:8084/api/users/UsersNotApproved", {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${storedToken}`,
+          }})
+    .then((res) => {
+      console.log("API Data:", res.data);
+      setSellersAppending(res.data);
+    })
+    .catch((err) => {
+      console.error("Erreur API :", err);
+    });
+}, []);
+
+//get users rejected
+  useEffect(() => {
+     const storedToken = localStorage.getItem("token") ;
+    axios.get("http://localhost:8084/api/users/UsersRejected", {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${storedToken}`,
+          }})
+    .then((res) => {
+      console.log("API Data:", res.data);
+      setSellersRejected(res.data);
+    })
+    .catch((err) => {
+      console.error("Erreur API :", err);
+    });
+}, []);
+
+//get users approved
+  useEffect(() => {
+     const storedToken = localStorage.getItem("token") ;
+    axios.get("http://localhost:8084/api/users/UsersApproved", {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${storedToken}`,
+          }})
+    .then((res) => {
+      console.log("API Data:", res.data);
+      setSellersApproved(res.data);
+    })
+    .catch((err) => {
+      console.error("Erreur API :", err);
+    });
+}, []);
+
+
+//get all user (seller)
+useEffect(() => {
+    axios
+      .get("http://localhost:8084/api/users/all")
+      .then((res) => {
+        const allUsers = res.data;
+
+        // Filtrer uniquement les sellers
+        const sellers = allUsers.filter(
+          (user) => user.role === "SELLER"
+        );
+
+        setSellerCount(sellers.length);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+ 
+  
   return (
     <Box sx={{ display: 'flex' }}>
       {/* --- AppBar --- */}
@@ -201,7 +266,8 @@ const chartData = [
               Comptes créés ({period})
             </Typography>
             <Typography variant="h3" fontWeight="bold">
-              {data.comptesCrees}
+           { /*{data.comptesCrees}*/ }  
+              {sellerCount}
             </Typography>
           </CardContent>
         </Card>
@@ -223,7 +289,7 @@ const chartData = [
               Comptes approuvés
             </Typography>
             <Typography variant="h3" fontWeight="bold">
-              40
+              {ApprovedAccountsCount}
             </Typography>
           </CardContent>
         </Card>
@@ -245,7 +311,7 @@ const chartData = [
               Comptes non approuvés
             </Typography>
             <Typography variant="h3" fontWeight="bold">
-              20
+              {ArchivedAccountsCount}
             </Typography>
           </CardContent>
         </Card>
@@ -267,7 +333,7 @@ const chartData = [
               Comptes en cours
             </Typography>
             <Typography variant="h3" fontWeight="bold">
-              25
+                {pendingAccountsCount}
             </Typography>
           </CardContent>
         </Card>
@@ -295,14 +361,14 @@ const chartData = [
             <TableBody>
               {currentSellers.map((seller, index) => (
                 <TableRow key={index}>
-                  <TableCell><Avatar src={seller.image} alt={seller.firstName} />
+                  <TableCell><Avatar src={seller.profileImgUrl} />
                   </TableCell>
                   <TableCell>{seller.firstName}</TableCell>
                   <TableCell>{seller.lastName}</TableCell>
-                  <TableCell>{seller.commercialName}</TableCell>
+                  <TableCell>{seller.businessName}</TableCell>
                   <TableCell>{seller.email}</TableCell>
-                  <TableCell>{seller.dob}</TableCell>
-                  <TableCell>{seller.phone}</TableCell>
+                  <TableCell>{seller.dateOfBirth}</TableCell>
+                  <TableCell>{seller.phoneNumber}</TableCell>
                  <TableCell align="center">
                     <Tooltip title="Voir le profil" arrow>
                       <IconButton
@@ -354,12 +420,12 @@ const chartData = [
         </TableContainer>
         <Stack spacing={2} alignItems="center" sx={{ mt: 3 }}>
           <Pagination
-   count={pageCount}
-    page={page}
-    onChange={(e, value) => setPage(value)}
-    variant="outlined"
-    color="secondary"
-  />
+            count={pageCount}
+              page={page}
+              onChange={(e, value) => setPage(value)}
+              variant="outlined"
+              color="secondary"
+            />
         </Stack>
 
 
