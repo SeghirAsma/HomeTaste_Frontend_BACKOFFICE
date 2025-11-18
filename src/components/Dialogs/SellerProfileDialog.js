@@ -57,7 +57,7 @@ export default function SellerProfileDialog({ open, onClose, seller }) {
             <Typography variant="subtitle1" fontWeight="bold">Company Information</Typography>
             <Divider sx={{ mb: 1 }} />
             <Typography><strong>Business Name:</strong> {seller.businessName}</Typography>
-            <Typography><strong>Adresse:</strong> {seller.address}</Typography>
+            <Typography><strong>Address:</strong> {seller.address}</Typography>
           </Grid>
         </Grid>
 

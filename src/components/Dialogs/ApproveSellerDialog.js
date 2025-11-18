@@ -12,14 +12,14 @@ export default function ApproveSellerDialog({ open, onClose, onConfirm, seller }
     <Dialog open={open} onClose={onClose}>
           <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <CheckCircleIcon color="success" />
-            <Typography variant="h6" fontWeight="bold">Approuver le vendeur</Typography>
+            <Typography variant="h6" fontWeight="bold">Approve the seller</Typography>
           </DialogTitle>          
           <DialogContent>
-           <Typography>Voulez-vous vraiment approuver <strong>{seller.commercialName}</strong> ?</Typography>
+           <Typography>Do you really want to approve <strong>{seller.lastName} {seller.firstName}</strong> ?</Typography>
           </DialogContent>
           <DialogActions>
-            <Button  onClick={onClose}>Annuler</Button>
-            <Button variant="contained" color="success" onClick={onConfirm}>Confirmer</Button>
+            <Button  onClick={onClose}>Cancel</Button>
+            <Button variant="contained" color="success" onClick={onConfirm}>Confirm</Button>
           </DialogActions>
         </Dialog>
   );

@@ -1,7 +1,7 @@
 import React, { useState,useEffect  } from "react";
 import {
   Box, Toolbar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-  Paper, Avatar, IconButton,  Tooltip, Stack, Grid, Card, CardContent, Typography, Select, MenuItem
+  Paper, Avatar, IconButton,  Tooltip, Stack
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -12,8 +12,10 @@ import SellerProfileDialog from "../components/Dialogs/SellerProfileDialog";
 import ApproveSellerDialog from "../components/Dialogs/ApproveSellerDialog";
 import RejectSellerDialog from "../components/Dialogs/RejectSellerDialog";
 import Pagination from '@mui/material/Pagination';
-import { LineChart, Line, ResponsiveContainer } from "recharts";
 import axios from "axios";
+import DashboardStats from "../components/DashboardStats";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const drawerWidth = 240;
 
@@ -27,30 +29,19 @@ export default function Dashboard() {
   const [sellersRejected, setSellersRejected] = useState([]);
   const [sellersApproved, setSellersApproved] = useState([]);
   const [sellerCount, setSellerCount] = useState(0);
+  const [allSellers, setAllSellers] = useState([]);
 
   const pendingAccountsCount = sellersAppending.length;
   const ArchivedAccountsCount = sellersRejected.length;
   const ApprovedAccountsCount = sellersApproved.length;
   
-  const [stats, setStats] = useState({
-    "1 W": 0,
-    "1 M": 0,
-    "3 M": 0,
-  });
+  const [stats, setStats] = useState({ "1 W": 0, "1 M": 0, "3 M": 0,"1 Y": 0 });
   const [period, setPeriod] = useState("1 M");
 
 
 
 //courbe
-const chartData = [
-  { name: "Lun", value: 10 },
-  { name: "Mar", value: 12 },
-  { name: "Mer", value: 8 },
-  { name: "Jeu", value: 15 },
-  { name: "Ven", value: 20 },
-  { name: "Sam", value: 18 },
-  { name: "Dim", value: 22 },
-];
+const [chartData, setChartData] = useState([]);
   // --- AppBar Menu ---
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
@@ -63,17 +54,8 @@ const chartData = [
 
     // --- drawer ---
   const [drawerOpen, setDrawerOpen] = useState(true);
-
-
-  // --- Actions Vendeur ---
-  const handleOpenProfile = (seller) => { setSelectedSeller(seller); setOpenProfile(true); };
-  const handleCloseProfile = () => { setOpenProfile(false); setSelectedSeller(null); };
-  const handleApprove = (seller) => { setSelectedSeller(seller); setOpenApprove(true); };
-  const handleConfirmApprove = () => { console.log("Approuvé :", selectedSeller); setOpenApprove(false); setSelectedSeller(null); };
-  const handleReject = (seller) => { setSelectedSeller(seller); setOpenReject(true); };
-  const handleConfirmReject = () => { console.log("Rejeté :", selectedSeller, "Raison :", reason); setOpenReject(false); setSelectedSeller(null); setReason(""); };
-
-  //pagination
+  
+    //pagination
   const [page, setPage] = useState(1);
   const rowsPerPage = 6; // nombre d’éléments max par page
   const startIndex = (page - 1) * rowsPerPage;
@@ -81,7 +63,61 @@ const chartData = [
   const currentSellers = sellersAppending.slice(startIndex, endIndex);
   const pageCount = Math.ceil(sellersAppending.length / rowsPerPage);
 
-  //get users nn approuvé
+  // --- Actions dialog ---
+  const handleOpenProfile = (seller) => { setSelectedSeller(seller); setOpenProfile(true); };
+  const handleCloseProfile = () => { setOpenProfile(false); setSelectedSeller(null); };
+  const handleApprove = (seller) => { setSelectedSeller(seller); setOpenApprove(true); };
+  const handleReject = (seller) => { setSelectedSeller(seller); setOpenReject(true); };
+
+//approve seller
+ const handleConfirmApprove = () => {
+  const storedToken = localStorage.getItem("token");
+  if (!selectedSeller) return;
+
+  axios.put(`http://localhost:8084/api/users/approve/${selectedSeller.id}`, {}, {
+    headers: {
+      Authorization: `Bearer ${storedToken}`
+    }
+  })
+  .then(() => {
+    setSellersAppending(prev => prev.filter(s => s.id !== selectedSeller.id));
+    setSellersApproved(prev => [...prev, selectedSeller]);
+    setOpenApprove(false);
+    setSelectedSeller(null);
+    toast.success("Seller approved successfully!");
+   
+  })
+  .catch((err) => {
+    console.error("Erreur lors de l'approbation :", err);
+     toast.error("Failed to approve seller");
+  });
+};
+
+//reject seller
+ const handleConfirmReject = () => {
+  const storedToken = localStorage.getItem("token");
+  if (!selectedSeller) return;
+
+  axios.put(`http://localhost:8084/api/users/reject/${selectedSeller.id}`, { reason: reason }, {
+    headers: {
+      Authorization: `Bearer ${storedToken}`
+    }
+  })
+  .then(() => {
+    setSellersAppending(prev => prev.filter(s => s.id !== selectedSeller.id));
+    setSellersRejected(prev => [...prev, selectedSeller]);
+    setOpenReject(false);
+    setSelectedSeller(null);
+    toast.success("Seller rejected successfully!");
+   
+  })
+  .catch((err) => {
+    console.error("Erreur lors de l'approbation :", err);
+     toast.error("Failed to reject seller");
+  });
+};
+
+  //get users en cours
   useEffect(() => {
      const storedToken = localStorage.getItem("token") ;
     axios.get("http://localhost:8084/api/users/UsersNotApproved", {
@@ -90,15 +126,14 @@ const chartData = [
             Authorization: `Bearer ${storedToken}`,
           }})
     .then((res) => {
-      console.log("API Data:", res.data);
       setSellersAppending(res.data);
     })
     .catch((err) => {
       console.error("Erreur API :", err);
     });
-}, []);
+  }, []);
 
-//get users rejected
+  //get users rejected
   useEffect(() => {
      const storedToken = localStorage.getItem("token") ;
     axios.get("http://localhost:8084/api/users/UsersRejected", {
@@ -107,15 +142,14 @@ const chartData = [
             Authorization: `Bearer ${storedToken}`,
           }})
     .then((res) => {
-      console.log("API Data:", res.data);
       setSellersRejected(res.data);
     })
     .catch((err) => {
       console.error("Erreur API :", err);
     });
-}, []);
+  }, []);
 
-//get users approved
+  //get users approved
   useEffect(() => {
      const storedToken = localStorage.getItem("token") ;
     axios.get("http://localhost:8084/api/users/UsersApproved", {
@@ -124,32 +158,128 @@ const chartData = [
             Authorization: `Bearer ${storedToken}`,
           }})
     .then((res) => {
-      console.log("API Data:", res.data);
       setSellersApproved(res.data);
     })
     .catch((err) => {
       console.error("Erreur API :", err);
     });
-}, []);
+  }, []);
 
 
-//get all user (seller)
-useEffect(() => {
-    axios
-      .get("http://localhost:8084/api/users/all")
+  //get all user (seller)
+  useEffect(() => {
+    axios.get("http://localhost:8084/api/users/all")
       .then((res) => {
         const allUsers = res.data;
-
-        // Filtrer uniquement les sellers
-        const sellers = allUsers.filter(
-          (user) => user.role === "SELLER"
-        );
-
-        setSellerCount(sellers.length);
+        const sellers = allUsers.filter(user => user.role === "SELLER");
+        setAllSellers(sellers);       
+        setSellerCount(sellers.length); 
       })
       .catch((err) => console.error(err));
   }, []);
- 
+
+
+  useEffect(() => {
+    const newStats = {
+      "1 W": calculateCreatedAccounts(allSellers, "1 W"),
+      "1 M": calculateCreatedAccounts(allSellers, "1 M"),
+      "3 M": calculateCreatedAccounts(allSellers, "3 M"),
+      "1 Y": calculateCreatedAccounts(allSellers, "1 Y"),
+    };
+    setStats(newStats);
+  }, [allSellers]);
+
+  
+  // Fonction pour filtrer les sellers selon période pour comptes crees
+  const calculateCreatedAccounts = (sellers, period) => {
+    const now = new Date();
+    return sellers.filter(seller => {
+      const createdAt = new Date(seller.creationDate);
+      if (isNaN(createdAt)) return false; 
+
+      if (period === "1 W") {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(now.getDate() - 7);
+        return createdAt >= oneWeekAgo;
+      }
+      if (period === "1 M") {
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(now.getMonth() - 1);
+        return createdAt >= oneMonthAgo;
+      }
+      if (period === "3 M") {
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(now.getMonth() - 3);
+        return createdAt >= threeMonthsAgo;
+      }
+
+      if (period === "1 Y") {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(now.getFullYear() - 1);
+      return createdAt >= oneYearAgo;
+      }
+      return false;
+    }).length;
+  };
+
+
+  useEffect(() => {
+    const count = calculateCreatedAccounts(allSellers, period);
+    setStats(prev => ({ ...prev, [period]: count }));
+  }, [period, allSellers]);
+
+  // Fonction pour filtrer les sellers selon période dans chart
+  const generateChartData = (users, period) => {
+    const now = new Date();
+    let data = [];
+
+    if (period === "1 W") {
+      for (let i = 6; i >= 0; i--) {
+        const day = new Date();
+        day.setDate(now.getDate() - i);
+        const dayStr = day.toLocaleDateString('en-US', { weekday: 'short' }); 
+        const count = users.filter(u => {
+          const created = new Date(u.creationDate);
+          return created.toDateString() === day.toDateString();
+        }).length;
+        data.push({ name: dayStr, value: count });
+      }
+    }
+
+    if (period === "1 M") {
+      for (let i = 29; i >= 0; i--) {
+        const day = new Date();
+        day.setDate(now.getDate() - i);
+        const dayStr = `${day.getDate()}/${day.getMonth() + 1}`;
+        const count = users.filter(u => {
+          const created = new Date(u.creationDate);
+          return created.toDateString() === day.toDateString();
+        }).length;
+        data.push({ name: dayStr, value: count });
+      }
+    }
+
+    if (period === "3 M" || period === "1 Y") {
+      const monthsCount = period === "3 M" ? 3 : 12;
+      for (let i = monthsCount - 1; i >= 0; i--) {
+        const month = new Date();
+        month.setMonth(now.getMonth() - i);
+        const monthStr = month.toLocaleString('default', { month: 'short' });
+        const count = users.filter(u => {
+          const created = new Date(u.creationDate);
+          return created.getMonth() === month.getMonth() &&
+                created.getFullYear() === month.getFullYear();
+        }).length;
+        data.push({ name: monthStr, value: count });
+      }
+    }
+    return data;
+  };
+
+  useEffect(() => {
+    const data = generateChartData(allSellers, period);
+    setChartData(data);
+  }, [allSellers, period]);
   
   return (
     <Box sx={{ display: 'flex' }}>
@@ -167,7 +297,6 @@ useEffect(() => {
 
       {/* --- Drawer --- */}
       <CustomerDrawer open={drawerOpen} />
-
       <Box
         component="main"
         sx={{
@@ -179,168 +308,17 @@ useEffect(() => {
       >
         <Toolbar />
 
-
-
         {/* --- statistiques --- */}
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
-        {/* Carte de la courbe */}
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: 3,
-            background: "linear-gradient(135deg, #8E2DE2 0%, #200751ff 100%)",
-            color: "#fff",
-            height: "100%",
-          }}
-        >
-          <CardContent>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography variant="h6" fontWeight="bold">
-                Évolution des comptes créés
-              </Typography>
-
-              <Select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                size="small"
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.2)",
-                  color: "#fff",
-                  borderRadius: 2,
-                  "& .MuiSvgIcon-root": { color: "#fff" },
-                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                  minWidth: 120,
-                }}
-              >
-                <MenuItem value="1 W">1 week</MenuItem>
-                <MenuItem value="1 M">1 month</MenuItem>
-                <MenuItem value="3 M">3 month</MenuItem>
-              </Select>
-            </Box>
-
-            <Box sx={{ width: "100%", height: 45 }}>
-              <ResponsiveContainer>
-                <LineChart data={chartData}>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(255,255,255,0.15)",
-                      border: "none",
-                      borderRadius: "8px",
-                      color: "#fff",
-                    }}
-                  />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#80D8FF"
-                  strokeWidth={2.5}
-                  dot={{ r: 3, stroke: "#80D8FF", fill: "#fff" }}
-                />
-
-                </LineChart>
-              </ResponsiveContainer>
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12} md={6}>
-        {/* Comptes créés */}
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: 3,
-            background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
-            color: "#fff",
-            height: "100%",
-          }}
-        >
-          <CardContent>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ opacity: 0.9 }}>
-              Comptes créés ({period})
-            </Typography>
-            <Typography variant="h3" fontWeight="bold">
-           { /*{data.comptesCrees}*/ }  
-              {sellerCount}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-    {/* Comptes approuvés */}
-      <Grid item xs={12} md={4}>
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: 3,
-            background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-            color: "#fff",
-            height: "100%",
-          }}
-        >
-          <CardContent>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ opacity: 0.9 }}>
-              Comptes approuvés
-            </Typography>
-            <Typography variant="h3" fontWeight="bold">
-              {ApprovedAccountsCount}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-    {/* Comptes nn approuvés */}
-      <Grid item xs={12} md={4}>
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: 3,
-            background: "linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%)",
-            color: "#fff",
-            height: "100%",
-          }}
-        >
-          <CardContent>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ opacity: 0.9 }}>
-              Comptes non approuvés
-            </Typography>
-            <Typography variant="h3" fontWeight="bold">
-              {ArchivedAccountsCount}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-
-   {/* Comptes en cours */}
-      <Grid item xs={12} md={4}>
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: 3,
-            background: "linear-gradient(135deg, #F7971E 0%, #FFD200 100%)",
-            color: "#fff",
-            height: "100%",
-          }}
-        >
-          <CardContent>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ opacity: 0.9 }}>
-              Comptes en cours
-            </Typography>
-            <Typography variant="h3" fontWeight="bold">
-                {pendingAccountsCount}
-            </Typography>
-          </CardContent>
-        </Card>
-
-      </Grid>
-    </Grid>
-
+        <DashboardStats
+          period={period}
+          setPeriod={setPeriod}
+          chartData={chartData}
+          sellerCount={sellerCount}
+          ApprovedAccountsCount={ApprovedAccountsCount}
+          ArchivedAccountsCount={ArchivedAccountsCount}
+          pendingAccountsCount={pendingAccountsCount}
+          stats={stats}
+        />
 
         {/* --- Tableau des comptes vendeurs --- */}
         <TableContainer component={Paper} sx={{ maxWidth: '100%', mx: "auto", mt: 4 }}>
@@ -418,6 +396,8 @@ useEffect(() => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* --- Pagination --- */}
         <Stack spacing={2} alignItems="center" sx={{ mt: 3 }}>
           <Pagination
             count={pageCount}
@@ -427,7 +407,6 @@ useEffect(() => {
               color="secondary"
             />
         </Stack>
-
 
         {/* --- Dialog Profil --- */}
         <SellerProfileDialog
@@ -442,6 +421,7 @@ useEffect(() => {
           onConfirm={handleConfirmApprove}
           seller={selectedSeller}
         />
+        <ToastContainer position="top-right" autoClose={2000} />
 
         {/* --- Dialog Reject --- */}
         <RejectSellerDialog

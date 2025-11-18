@@ -12,23 +12,18 @@ export default function RejectSellerDialog({ open, onClose, onConfirm, seller, r
        <Dialog  open={open} onClose={onClose}>
           <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <CancelIcon color="error" />
-            <Typography variant="h6" fontWeight="bold">Rejeter le vendeur</Typography>
+            <Typography variant="h6" fontWeight="bold">Reject the seller</Typography>
           </DialogTitle>
           <DialogContent>
-          <Typography>Entrez la raison du rejet pour <strong>{seller.commercialName}</strong> :</Typography>
-            <TextField 
-            autoFocus 
-            margin="dense" 
-            label="Raison" 
-            fullWidth 
-            variant="outlined" 
+          <Typography>Enter the reason for the rejection for <strong>{seller.lastName} {seller.firstName}</strong> :</Typography>
+            <TextField autoFocus margin="dense" label="Reason" fullWidth variant="outlined" 
             value={reason} 
             onChange={(e) => setReason(e.target.value)}
              sx={{ mt: 2 }} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Annuler</Button>
-            <Button variant="contained" color="error" onClick={onConfirm}>Confirmer</Button>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button variant="contained" color="error" onClick={onConfirm}>Confirm</Button>
           </DialogActions>
         </Dialog>
 
