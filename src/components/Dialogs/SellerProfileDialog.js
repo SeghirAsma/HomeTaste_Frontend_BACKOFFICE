@@ -24,7 +24,7 @@ export default function SellerProfileDialog({ open, onClose, seller }) {
         <Box sx={{ p: 2 }}>
           {/* Avatar et info de base */}
         <Grid container justifyContent="center" sx={{ mb: 2 }}>
-          <Grid item>
+          <Grid >
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <Avatar 
                 src={seller.profileImgUrl} 
@@ -45,7 +45,7 @@ export default function SellerProfileDialog({ open, onClose, seller }) {
 
           {/* Personal Info et Company Info côte à côte */}
         <Grid container spacing={12}>
-          <Grid item xs={12} sm={6}>
+          <Grid  xs={12} sm={6}>
             <Typography variant="subtitle1" fontWeight="bold">Personal Information</Typography>
             <Divider sx={{ mb: 1 }} />
             <Typography><strong>Phone Number:</strong> {seller.phoneNumber}</Typography>
@@ -53,7 +53,7 @@ export default function SellerProfileDialog({ open, onClose, seller }) {
             <Typography><strong>Address:</strong> {seller.address}</Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid  xs={12} sm={6}>
             <Typography variant="subtitle1" fontWeight="bold">Company Information</Typography>
             <Divider sx={{ mb: 1 }} />
             <Typography><strong>Business Name:</strong> {seller.businessName}</Typography>
@@ -65,7 +65,7 @@ export default function SellerProfileDialog({ open, onClose, seller }) {
 
           {/* Business Details toujours en dessous */}
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Typography variant="subtitle1" fontWeight="bold">Business Details</Typography>
               <Divider sx={{ mb: 1 }} />
               <Typography sx={{ wordBreak: "break-word", maxWidth: 600, whiteSpace: 'pre-line' }}>
@@ -88,6 +88,33 @@ export default function SellerProfileDialog({ open, onClose, seller }) {
               ) : (
                 <Typography color="text.secondary">No site available</Typography>
               )}
+
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Document
+                </Typography>
+                <Divider sx={{ mb: 1 }} />
+                  <Box sx={{ p: 2, border: "1px solid #ddd", borderRadius: 2, display: "flex",
+                  flexDirection: "column", alignItems: "center", gap: 1, maxWidth: 250 }}
+                  >
+                      <img 
+                      src="https://cdn-icons-png.flaticon.com/512/337/337946.png"
+                      alt="PDF"
+                      width="80"
+                    />
+
+                    <a href={seller.documentUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}  >
+                      <Box sx={{ mt: 1, px: 2,py: 1, bgcolor: "primary.main", color: "white",
+                          borderRadius: 1.5, fontWeight: "bold", cursor: "pointer", textAlign: "center",
+                          "&:hover": { opacity: 0.9 },
+                        }}
+                      >
+                        Open Document
+                      </Box>
+                    </a>
+                  </Box>
+              </Box>
+
             </Grid>
           </Grid>
         </Box>

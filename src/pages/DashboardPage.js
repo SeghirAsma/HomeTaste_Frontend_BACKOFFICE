@@ -348,7 +348,7 @@ const [chartData, setChartData] = useState([]);
                   <TableCell>{seller.dateOfBirth}</TableCell>
                   <TableCell>{seller.phoneNumber}</TableCell>
                  <TableCell align="center">
-                    <Tooltip title="Voir le profil" arrow>
+                    <Tooltip title="view profile" arrow>
                       <IconButton
                         onClick={() => handleOpenProfile(seller)}
                         sx={{
@@ -364,7 +364,7 @@ const [chartData, setChartData] = useState([]);
 
                   <TableCell align="center">
                     <Stack direction="row" justifyContent="center">
-                      <Tooltip title="Approuver" arrow>
+                      <Tooltip title="Approve" arrow>
                         <IconButton
                           onClick={() => handleApprove(seller)}
                           sx={{
@@ -377,7 +377,7 @@ const [chartData, setChartData] = useState([]);
                         </IconButton>
                       </Tooltip>
 
-                      <Tooltip title="Rejeter" arrow>
+                      <Tooltip title="Reject" arrow>
                         <IconButton
                           onClick={() => handleReject(seller)}
                           sx={{

@@ -11,7 +11,7 @@ export default function DashboardStats({ period, setPeriod, chartData, ApprovedA
     <Grid container spacing={3}>
 
       {/* --- Courbe --- */}
-      <Grid item xs={12} md={6}>
+      <Grid xs={12} md={6}>
         <Card
           sx={{  borderRadius: 3, boxShadow: 3,
             background: "linear-gradient(135deg, #8E2DE2 0%, #200751ff 100%)",
@@ -47,7 +47,7 @@ export default function DashboardStats({ period, setPeriod, chartData, ApprovedA
 
             <Box sx={{ width: "100%", height: 45 }}>
               <ResponsiveContainer>
-                <LineChart data={chartData}>
+                <LineChart data={chartData} >
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "rgba(255,255,255,0.15)",
@@ -71,7 +71,7 @@ export default function DashboardStats({ period, setPeriod, chartData, ApprovedA
       </Grid>
 
       {/* Comptes créés */}
-      <Grid item xs={12} md={6}>
+      <Grid  xs={12} md={6}>
         <Card
           sx={{
             borderRadius: 3,
@@ -93,7 +93,7 @@ export default function DashboardStats({ period, setPeriod, chartData, ApprovedA
       </Grid>
 
       {/* Comptes approuvés */}
-      <Grid item xs={12} md={4}>
+      <Grid  xs={12} md={4}>
         <Card
           sx={{
             borderRadius: 3,
@@ -115,7 +115,7 @@ export default function DashboardStats({ period, setPeriod, chartData, ApprovedA
       </Grid>
 
       {/* Comptes rejetés */}
-      <Grid item xs={12} md={4}>
+      <Grid  xs={12} md={4}>
         <Card
           sx={{
             borderRadius: 3,
@@ -137,7 +137,7 @@ export default function DashboardStats({ period, setPeriod, chartData, ApprovedA
       </Grid>
 
       {/* Comptes en cours */}
-      <Grid item xs={12} md={4}>
+      <Grid  xs={12} md={4}>
         <Card
           sx={{
             borderRadius: 3,
